@@ -283,9 +283,8 @@ class IQ_Option:
 
     # ------- chek if binary/digit/cfd/stock... if open or not
 
-    def get_all_open_time(self):
-        # for binary option turbo and binary
-        OPEN_TIME = nested_dict(3, dict)
+    def __get_binary_open(self):
+        # for turbo and binary pairs
         binary_data = self.get_all_init_v2()
         binary_list = ["binary", "turbo"]
         if binary_data:
@@ -296,39 +295,51 @@ class IQ_Option:
                         name = str(active["name"]).split(".")[1]
                         if active["enabled"] == True:
                             if active["is_suspended"] == True:
-                                OPEN_TIME[option][name]["open"] = False
+                                self.OPEN_TIME[option][name]["open"] = False
                             else:
-                                OPEN_TIME[option][name]["open"] = True
+                                self.OPEN_TIME[option][name]["open"] = True
                         else:
-                            OPEN_TIME[option][name]["open"] = active["enabled"]
+                            self.OPEN_TIME[option][name]["open"] = active["enabled"]    
 
-        # for digital
+    def __get_digital_open(self):
+        # for digital options
         digital_data = self.get_digital_underlying_list_data()["underlying"]
         for digital in digital_data:
             name = digital["underlying"]
             schedule = digital["schedule"]
-            OPEN_TIME["digital"][name]["open"] = False
+            self.OPEN_TIME["digital"][name]["open"] = False
             for schedule_time in schedule:
                 start = schedule_time["open"]
                 end = schedule_time["close"]
                 if start < time.time() < end:
-                    OPEN_TIME["digital"][name]["open"] = True
+                    self.OPEN_TIME["digital"][name]["open"] = True
 
-        # for OTHER
+    def __get_other_open(self):
+        # Crypto and etc pairs
         instrument_list = ["cfd", "forex", "crypto"]
         for instruments_type in instrument_list:
             ins_data = self.get_instruments(instruments_type)["instruments"]
             for detail in ins_data:
                 name = detail["name"]
                 schedule = detail["schedule"]
-                OPEN_TIME[instruments_type][name]["open"] = False
+                self.OPEN_TIME[instruments_type][name]["open"] = False
                 for schedule_time in schedule:
                     start = schedule_time["open"]
                     end = schedule_time["close"]
                     if start < time.time() < end:
-                        OPEN_TIME[instruments_type][name]["open"] = True
+                        self.OPEN_TIME[instruments_type][name]["open"] = True
 
-        return OPEN_TIME
+    def get_all_open_time(self):
+        # all pairs openned
+        self.OPEN_TIME = nested_dict(3, dict)
+        binary = threading.Thread(target=self.__get_binary_open)
+        digital = threading.Thread(target=self.__get_digital_open)
+        other = threading.Thread(target=self.__get_other_open)
+
+        binary.run(), digital.run(), other.run()
+
+        # binary.join(), digital.join(), other.join()
+        return self.OPEN_TIME
 
     # --------for binary option detail
 
