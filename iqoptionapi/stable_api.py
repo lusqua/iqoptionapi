@@ -336,9 +336,9 @@ class IQ_Option:
         digital = threading.Thread(target=self.__get_digital_open)
         other = threading.Thread(target=self.__get_other_open)
 
-        binary.run(), digital.run(), other.run()
+        binary.start(), digital.start(), other.start()
 
-        # binary.join(), digital.join(), other.join()
+        binary.join(), digital.join(), other.join()
         return self.OPEN_TIME
 
     # --------for binary option detail
