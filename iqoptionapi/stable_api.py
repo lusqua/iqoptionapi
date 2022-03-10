@@ -513,6 +513,9 @@ class IQ_Option:
         self.api.candles.candles_data = None
         while True:
             try:
+                if ACTIVES not in OP_code.ACTIVES:
+                    print('Asset {} not found on consts'.format(ACTIVES))
+                    break
                 self.api.getcandles(
                     OP_code.ACTIVES[ACTIVES], interval, count, endtime)
                 while self.check_connect and self.api.candles.candles_data == None:
